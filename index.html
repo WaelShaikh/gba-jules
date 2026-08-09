@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GBA Recomp & Debugger</title>
+  </head>
+  <body>
+    <div id="app">
+      <div class="main-view">
+        <div class="title-bar">
+          <h1>GBA RECOMP</h1>
+          <div class="stats" id="perf-stats">FPS: 0.0 | CPU: 0%</div>
+        </div>
+
+        <div class="screen-container">
+          <canvas id="screen" class="screen-canvas" width="240" height="160"></canvas>
+          <div id="drop-zone-overlay" class="no-rom-overlay">
+            <div id="drop-zone" class="drop-zone">
+              <h3>Drag & Drop .gba ROM</h3>
+              <p>or click to select file</p>
+              <input type="file" id="rom-input" accept=".gba" style="display: none;" />
+            </div>
+          </div>
+        </div>
+
+        <div class="controls-bar">
+          <button id="btn-play" class="btn btn-primary" disabled>Play</button>
+          <button id="btn-pause" class="btn" disabled>Pause</button>
+          <button id="btn-step" class="btn" disabled>Step</button>
+          <button id="btn-reset" class="btn" disabled>Reset</button>
+        </div>
+
+        <div class="console-panel">
+          <div class="console-header">Console Output</div>
+          <div id="console-logs" class="console-logs"></div>
+        </div>
+      </div>
+
+      <!-- Debugger Drawer Panel -->
+      <div class="debugger-panel">
+        <div class="debugger-tabs">
+          <button class="tab active" data-tab="tab-cpu">CPU / Regs</button>
+          <button class="tab" data-tab="tab-disasm">Disassembly</button>
+          <button class="tab" data-tab="tab-mem">Memory</button>
+          <button class="tab" data-tab="tab-mods">Mods</button>
+        </div>
+
+        <!-- CPU Tab -->
+        <div id="tab-cpu" class="tab-content active">
+          <h3>CPU Status</h3>
+          <div class="reg-grid" id="regs-container">
+            <!-- Dynamically populated registers -->
+          </div>
+          <div>
+            <strong>CPSR:</strong> <span id="cpsr-val" style="font-family: monospace;">00000000</span>
+          </div>
+        </div>
+
+        <!-- Disassembly Tab -->
+        <div id="tab-disasm" class="tab-content">
+          <h3>Interactive Disassembly</h3>
+          <div class="disasm-list" id="disasm-container">
+            <!-- Dissasembly lines -->
+          </div>
+        </div>
+
+        <!-- Memory Tab -->
+        <div id="tab-mem" class="tab-content">
+          <h3>Memory Viewer</h3>
+          <div class="memory-controls">
+            <input type="text" id="mem-addr-input" placeholder="0x02000000" style="flex: 1; padding: 6px; background: #333; color: #fff; border: 1px solid #444; border-radius: 4px;" />
+            <button id="btn-mem-go" class="btn">Go</button>
+          </div>
+          <div class="memory-grid" id="mem-container">
+            <!-- Memory hex dump -->
+          </div>
+        </div>
+
+        <!-- Mods Tab -->
+        <div id="tab-mods" class="tab-content">
+          <h3>Modifications / Script Hooks</h3>
+          <div class="mod-list-container" id="mods-container">
+            <!-- Installed mods and examples -->
+          </div>
+        </div>
+      </div>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

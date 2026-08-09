@@ -1,0 +1,304 @@
+body {
+  margin: 0;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #1a1a1a;
+  color: #f5f5f5;
+  user-select: none;
+  overflow: hidden;
+}
+
+#app {
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+}
+
+.main-view {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 15px;
+  box-sizing: border-box;
+}
+
+.title-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 2px solid #333;
+  padding-bottom: 10px;
+  margin-bottom: 15px;
+}
+
+.title-bar h1 {
+  margin: 0;
+  font-size: 1.5rem;
+  color: #ff5722;
+  text-shadow: 0 0 5px rgba(255, 87, 34, 0.5);
+}
+
+.stats {
+  font-family: monospace;
+  font-size: 0.9rem;
+  color: #4caf50;
+}
+
+.screen-container {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #000;
+  border: 4px solid #333;
+  border-radius: 8px;
+  box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.8);
+  position: relative;
+}
+
+.screen-canvas {
+  width: 100%;
+  max-width: 480px; /* 2x Scale */
+  height: auto;
+  max-height: 320px;
+  image-rendering: pixelated;
+}
+
+.no-rom-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(10, 10, 10, 0.95);
+  border-radius: 4px;
+}
+
+.drop-zone {
+  border: 3px dashed #ff5722;
+  border-radius: 12px;
+  padding: 40px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.drop-zone:hover, .drop-zone.dragover {
+  background-color: rgba(255, 87, 34, 0.1);
+  border-color: #ff7043;
+}
+
+.controls-bar {
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
+  padding-top: 10px;
+  border-top: 2px solid #333;
+}
+
+.btn {
+  background-color: #333;
+  color: #fff;
+  border: 1px solid #444;
+  padding: 8px 16px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.btn:hover {
+  background-color: #444;
+}
+
+.btn-primary {
+  background-color: #ff5722;
+  border-color: #ff7043;
+}
+
+.btn-primary:hover {
+  background-color: #e64a19;
+}
+
+/* Console & Log */
+.console-panel {
+  height: 150px;
+  background-color: #111;
+  border: 1px solid #333;
+  border-radius: 4px;
+  margin-top: 15px;
+  display: flex;
+  flex-direction: column;
+}
+
+.console-header {
+  background-color: #222;
+  padding: 6px 12px;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  border-bottom: 1px solid #333;
+  color: #aaa;
+}
+
+.console-logs {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px;
+  font-family: monospace;
+  font-size: 0.85rem;
+  color: #00ff00;
+}
+
+/* Debugger & Sidebar Drawer */
+.debugger-panel {
+  width: 500px;
+  background-color: #202020;
+  border-left: 2px solid #333;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+
+.debugger-tabs {
+  display: flex;
+  background-color: #151515;
+  border-bottom: 1px solid #333;
+}
+
+.tab {
+  flex: 1;
+  padding: 10px;
+  text-align: center;
+  cursor: pointer;
+  background: none;
+  border: none;
+  color: #888;
+  font-size: 0.85rem;
+  font-weight: bold;
+}
+
+.tab.active {
+  color: #ff5722;
+  background-color: #202020;
+  border-bottom: 2px solid #ff5722;
+}
+
+.tab-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 15px;
+  display: none;
+}
+
+.tab-content.active {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Custom Grid/Style for Registers & Disassembly */
+.reg-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  font-family: monospace;
+  margin-bottom: 15px;
+}
+
+.reg-item {
+  background-color: #282828;
+  padding: 6px;
+  border-radius: 4px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.reg-label {
+  color: #999;
+}
+
+.reg-val {
+  color: #4caf50;
+}
+
+.disasm-list {
+  background-color: #151515;
+  border-radius: 4px;
+  padding: 8px;
+  font-family: monospace;
+  font-size: 0.85rem;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.disasm-line {
+  padding: 3px 0;
+  cursor: pointer;
+}
+
+.disasm-line.current {
+  background-color: rgba(255, 87, 34, 0.25);
+  border-left: 3px solid #ff5722;
+  padding-left: 5px;
+}
+
+.disasm-line.breakpoint {
+  color: #f44336;
+}
+
+/* Memory Editor CSS */
+.memory-controls {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.memory-grid {
+  font-family: monospace;
+  font-size: 0.85rem;
+  background-color: #151515;
+  padding: 10px;
+  border-radius: 4px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  flex: 1;
+}
+
+/* Mod System Controls */
+.mod-list-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.mod-card {
+  background-color: #2a2a2a;
+  border: 1px solid #444;
+  border-radius: 6px;
+  padding: 12px;
+}
+
+.mod-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.mod-name {
+  font-weight: bold;
+  color: #ff5722;
+}
+
+.mod-desc {
+  font-size: 0.8rem;
+  color: #aaa;
+}
+
+.mod-author {
+  font-size: 0.75rem;
+  color: #777;
+}

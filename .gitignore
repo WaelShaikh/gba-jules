@@ -1,0 +1,5 @@
+node_modules/
+dist/
+tmp_gbajs2/
+*.log
+.DS_Store

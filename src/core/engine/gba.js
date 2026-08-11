@@ -117,6 +117,12 @@ class GameBoyAdvance {
 	hasRom() {
 		return !!this.rom;
 	}
+	loadRom(rom, callback) {
+		var result = this.setRom(rom);
+		if (callback) {
+			callback(result);
+		}
+	}
 	loadRomFromFile(romFile, callback) {
 		var reader = new FileReader();
 		var self = this;

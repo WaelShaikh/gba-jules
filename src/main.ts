@@ -78,10 +78,15 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   // Wire buttons
+  const loadBtn = document.getElementById("btn-load");
   const playBtn = document.getElementById("btn-play");
   const pauseBtn = document.getElementById("btn-pause");
   const stepBtn = document.getElementById("btn-step");
   const resetBtn = document.getElementById("btn-reset");
+
+  loadBtn?.addEventListener("click", () => {
+    romInput.click();
+  });
 
   let isPlaying = false;
   const loop = () => {

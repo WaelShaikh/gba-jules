@@ -1,13 +1,12 @@
-import { GameBoyAdvance } from "../core/gba";
 import { GameBoyAdvanceUtils } from "../core/utils";
 import { BreakpointManager } from "../debugger/debugger";
 import { SimpleDisassembler } from "../debugger/disassembler";
 
 export class DebuggerUI {
-  private gba: GameBoyAdvance;
+  private gba: any;
   private breakpoints: BreakpointManager;
 
-  constructor(gba: GameBoyAdvance, breakpoints: BreakpointManager) {
+  constructor(gba: any, breakpoints: BreakpointManager) {
     this.gba = gba;
     this.breakpoints = breakpoints;
 
@@ -48,6 +47,7 @@ export class DebuggerUI {
     if (!container) return;
 
     let html = "";
+    const gprs = this.gba.cpu.gprs;
     for (let i = 0; i < 16; i++) {
       let name = `R${i}`;
       if (i === 13) name = "SP (R13)";
@@ -57,7 +57,7 @@ export class DebuggerUI {
       html += `
         <div class="reg-item">
           <span class="reg-label">${name}:</span>
-          <span class="reg-val">${GameBoyAdvanceUtils.hex(this.gba.cpu.registers[i])}</span>
+          <span class="reg-val">${GameBoyAdvanceUtils.hex(gprs[i] || 0)}</span>
         </div>
       `;
     }
@@ -65,7 +65,7 @@ export class DebuggerUI {
 
     const cpsrVal = document.getElementById("cpsr-val");
     if (cpsrVal) {
-      cpsrVal.innerText = GameBoyAdvanceUtils.hex(this.gba.cpu.cpsr);
+      cpsrVal.innerText = GameBoyAdvanceUtils.hex(this.gba.cpu.cpsr || 0);
     }
   }
 
@@ -73,22 +73,25 @@ export class DebuggerUI {
     const container = document.getElementById("disasm-container");
     if (!container) return;
 
-    const currentPC = this.gba.cpu.registers[15];
-    const isThumb = !!(this.gba.cpu.cpsr & this.gba.cpu.MASK_T);
+    const currentPC = this.gba.cpu.gprs[this.gba.cpu.PC] || 0x08000000;
+    const isThumb = !!(this.gba.cpu.execMode === this.gba.cpu.MODE_THUMB);
     const instSize = isThumb ? 2 : 4;
 
     let html = "";
-    // Display instructions around the current PC
     const startAddr = currentPC - instSize * 5;
     for (let i = 0; i < 12; i++) {
       const addr = startAddr + i * instSize;
-      if (addr < 0x08000000 || addr >= 0x08000000 + this.gba.mmu.rom.length) continue;
+      if (addr < 0x08000000) continue;
 
       let rawVal = 0;
-      if (isThumb) {
-        rawVal = this.gba.mmu.read16(addr);
-      } else {
-        rawVal = this.gba.mmu.read32(addr);
+      try {
+        if (isThumb) {
+          rawVal = this.gba.mmu.load16(addr);
+        } else {
+          rawVal = this.gba.mmu.load32(addr);
+        }
+      } catch {
+        rawVal = 0;
       }
 
       const disasmText = SimpleDisassembler.disassemble(rawVal, isThumb);
@@ -106,7 +109,7 @@ export class DebuggerUI {
 
     container.innerHTML = html;
 
-    // Register toggle click triggers on instructions to add/remove breakpoints
+    // Toggle breakpoints
     container.querySelectorAll(".disasm-line").forEach((line) => {
       line.addEventListener("click", () => {
         const addr = parseInt(line.getAttribute("data-addr") || "", 10);
@@ -135,7 +138,12 @@ export class DebuggerUI {
       let charVals = "";
 
       for (let col = 0; col < 16; col++) {
-        const val = this.gba.mmu.read8(rowAddr + col);
+        let val = 0;
+        try {
+          val = this.gba.mmu.load8(rowAddr + col);
+        } catch {
+          val = 0;
+        }
         hexVals.push(GameBoyAdvanceUtils.hex(val, 2));
 
         if (val >= 32 && val <= 126) {

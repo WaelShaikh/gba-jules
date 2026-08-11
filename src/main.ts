@@ -1,5 +1,4 @@
-import "./frontend/style.css";
-import { GameBoyAdvance } from "./core/gba";
+import "./core/index"; // Boots and attaches the legacy GBA components to the window
 import { HookManager } from "./hooks/hook-manager";
 import { RuntimePatcher } from "./hooks/runtime-patcher";
 import { BreakpointManager, SimpleProfiler } from "./debugger/debugger";
@@ -7,10 +6,11 @@ import { DebuggerUI } from "./frontend/debugger-ui";
 import { ScreenRenderer } from "./frontend/screen";
 import { KeypadController } from "./frontend/controls";
 import { GBA_GAME_PROFILES } from "./rom/profiles";
-import { GameBoyAdvanceUtils } from "./core/utils";
+import { GameBoyAdvanceUtils, GameBoyAdvanceROM } from "./core/utils";
 
 document.addEventListener("DOMContentLoaded", () => {
-  const gba = new GameBoyAdvance();
+  // Initialize physical GBA Core
+  const gba = new window.GameBoyAdvance();
   const hooks = new HookManager(gba.cpu, gba.mmu);
   const patcher = new RuntimePatcher(gba.mmu);
   const breakpoints = new BreakpointManager(gba);
@@ -18,44 +18,45 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const screenCanvas = document.getElementById("screen") as HTMLCanvasElement;
   const screenRenderer = new ScreenRenderer(screenCanvas, gba);
-  // Keyboard keypad control configuration
   new KeypadController(gba);
 
   const debugUI = new DebuggerUI(gba, breakpoints);
 
-  // Stats Counters
-  let frameCount = 0;
-  let lastStatsTime = performance.now();
-
-  // Wire hooks to updates
-  gba.onFrameCallback = () => {
-    frameCount++;
+  // Setup callbacks on frame events
+  gba.video.vblankCallback = () => {
     screenRenderer.renderFrame();
 
-    // Trigger frame hooks
+    // Trigger vblank/frame hooks
     for (const cb of hooks.onFrameHooks) {
       cb();
     }
   };
 
-  // Setup Drag & Drop ROM load
+  // Drag & Drop ROM Loader
   const dropZoneOverlay = document.getElementById("drop-zone-overlay");
   const romInput = document.getElementById("rom-input") as HTMLInputElement;
 
   const loadRomFile = async (file: File) => {
     debugUI.log(`Reading ROM: ${file.name}...`);
     const buffer = await file.arrayBuffer();
-    gba.loadRom(new Uint8Array(buffer));
 
-    if (gba.rom) {
+    // Load ROM directly to GBA.js emulator
+    gba.loadRom(buffer, (success: boolean) => {
+      if (success === false) {
+        debugUI.log("Failed to load ROM.");
+        return;
+      }
+
+      const romObj = new GameBoyAdvanceROM(new Uint8Array(buffer));
+      gba.rom = romObj;
+
       debugUI.log(`Successfully Loaded GBA Cartridge!`);
-      debugUI.log(`Title: ${gba.rom.title}`);
-      debugUI.log(`Game Code: ${gba.rom.gameCode}`);
-      debugUI.log(`Maker Code: ${gba.rom.makerCode}`);
-      debugUI.log(`Checksum: 0x${gba.rom.checksum.toString(16).toUpperCase()}`);
+      debugUI.log(`Title: ${romObj.title}`);
+      debugUI.log(`Game Code: ${romObj.gameCode}`);
+      debugUI.log(`Maker Code: ${romObj.makerCode}`);
+      debugUI.log(`Checksum: 0x${romObj.checksum.toString(16).toUpperCase()}`);
 
-      // Auto check address profile
-      const matchedProfile = GBA_GAME_PROFILES.find(p => gba.rom?.gameCode.includes(p.gameCode));
+      const matchedProfile = GBA_GAME_PROFILES.find(p => romObj.gameCode.includes(p.gameCode));
       if (matchedProfile) {
         debugUI.log(`Recognized cartridge: Match found in address profile databases: "${matchedProfile.name}"!`);
         loadCheatsAndWatches(matchedProfile);
@@ -63,10 +64,8 @@ document.addEventListener("DOMContentLoaded", () => {
         debugUI.log(`Generic Address Maps deployed.`);
       }
 
-      // Hide overlay
       if (dropZoneOverlay) dropZoneOverlay.style.display = "none";
 
-      // Enable control buttons
       document.getElementById("btn-play")?.removeAttribute("disabled");
       document.getElementById("btn-pause")?.removeAttribute("disabled");
       document.getElementById("btn-step")?.removeAttribute("disabled");
@@ -75,7 +74,7 @@ document.addEventListener("DOMContentLoaded", () => {
       debugUI.updateCPUStats();
       debugUI.updateDisassemblyView();
       debugUI.updateMemoryView(0x02000000);
-    }
+    });
   };
 
   // Wire buttons
@@ -84,60 +83,52 @@ document.addEventListener("DOMContentLoaded", () => {
   const stepBtn = document.getElementById("btn-step");
   const resetBtn = document.getElementById("btn-reset");
 
-  let mainLoopId: number | null = null;
+  let isPlaying = false;
   const loop = () => {
-    if (!gba.paused) {
-      gba.runFrame();
+    if (isPlaying) {
+      gba.step();
 
       // Update interactive debuggers periodically
       debugUI.updateCPUStats();
       debugUI.updateDisassemblyView();
 
       // Check breakpoints
-      if (breakpoints.checkBreakpoint(gba.cpu.registers[15])) {
-        gba.paused = true;
-        debugUI.log(`Hit execution breakpoint at ${GameBoyAdvanceUtils.hex(gba.cpu.registers[15])}`);
+      const currentPC = gba.cpu.gprs[gba.cpu.PC];
+      if (breakpoints.checkBreakpoint(currentPC)) {
+        isPlaying = false;
+        debugUI.log(`Hit execution breakpoint at ${GameBoyAdvanceUtils.hex(currentPC)}`);
       }
 
-      // Calculate FPS
-      const now = performance.now();
-      if (now - lastStatsTime >= 1000) {
-        const fps = (frameCount * 1000) / (now - lastStatsTime);
-        const statsEl = document.getElementById("perf-stats");
-        if (statsEl) {
-          statsEl.innerText = `FPS: ${fps.toFixed(1)} | CPU: ${gba.paused ? 'Idle' : 'Active'}`;
-        }
-        frameCount = 0;
-        lastStatsTime = now;
-      }
-
-      mainLoopId = requestAnimationFrame(loop);
+      requestAnimationFrame(loop);
     }
   };
 
   playBtn?.addEventListener("click", () => {
+    isPlaying = true;
     gba.paused = false;
+    gba.run(); // Starts the legacy audio/video worker timers
     debugUI.log("Emulator execution booted / resumed.");
     loop();
   });
 
   pauseBtn?.addEventListener("click", () => {
-    gba.paused = true;
-    if (mainLoopId) cancelAnimationFrame(mainLoopId);
+    isPlaying = false;
+    gba.pause();
     debugUI.log("Emulator paused.");
   });
 
   stepBtn?.addEventListener("click", () => {
     gba.step();
-    // Record profiling statistics
-    profiler.recordExecution(gba.cpu.registers[15]);
+    const currentPC = gba.cpu.gprs[gba.cpu.PC];
+    profiler.recordExecution(currentPC);
     debugUI.updateCPUStats();
     debugUI.updateDisassemblyView();
-    debugUI.updateMemoryView(gba.cpu.registers[15]);
+    debugUI.updateMemoryView(currentPC);
   });
 
   resetBtn?.addEventListener("click", () => {
     gba.reset();
+    isPlaying = false;
     debugUI.log("Emulator state reset.");
     debugUI.updateCPUStats();
     debugUI.updateDisassemblyView();
@@ -231,8 +222,8 @@ document.addEventListener("DOMContentLoaded", () => {
       btn.addEventListener("click", () => {
         const idx = parseInt(btn.getAttribute("data-index") || "0", 10);
         const watch = profile.watches[idx];
-        hooks.onMemoryWrite(watch.address, (addr, val) => {
-          debugUI.log(`[Watch Alert] ${watch.name} changed at ${GameBoyAdvanceUtils.hex(addr)} -> ${val}`);
+        hooks.onMemoryWrite(watch.address, (val) => {
+          debugUI.log(`[Watch Alert] ${watch.name} changed to ${val}`);
         });
         debugUI.log(`[Hooks] Registered write watcher on ${watch.name} (0x${watch.address.toString(16).toUpperCase()})`);
       });
@@ -245,7 +236,6 @@ document.addEventListener("DOMContentLoaded", () => {
       const code = codeTextArea?.value;
       if (code) {
         try {
-          // Expose sandbox globals
           const sandbox = {
             gba,
             hooks,

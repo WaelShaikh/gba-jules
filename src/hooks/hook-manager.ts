@@ -1,8 +1,5 @@
-import { ARMCore } from "../core/cpu/cpu";
-import { GameBoyAdvanceMMU } from "../core/memory/memory";
-
 export interface CPUContext {
-  registers: Uint32Array;
+  registers: Int32Array;
   pc: number;
   cpsr: number;
 
@@ -17,12 +14,12 @@ export interface CPUContext {
 
 export type ExecuteCallback = (ctx: CPUContext) => void;
 export type MemoryReadCallback = (address: number, size: number) => void;
-export type MemoryWriteCallback = (address: number, size: number, value: number) => void;
+export type MemoryWriteCallback = (address: number, val: number) => void;
 export type MemoryWriteRangeCallback = (address: number, oldValue: number, newValue: number) => void;
 
 export class HookManager {
-  private cpu: ARMCore;
-  private mmu: GameBoyAdvanceMMU;
+  private cpu: any;
+  private mmu: any;
 
   private executeHooks: Map<number, ExecuteCallback[]> = new Map();
   private memoryReadHooks: Map<number, MemoryReadCallback[]> = new Map();
@@ -31,14 +28,31 @@ export class HookManager {
 
   onFrameHooks: (() => void)[] = [];
 
-  constructor(cpu: ARMCore, mmu: GameBoyAdvanceMMU) {
+  constructor(cpu: any, mmu: any) {
     this.cpu = cpu;
     this.mmu = mmu;
 
-    // Set up hook callbacks inside CPU and memory
-    this.cpu.onExecuteCallback = (pc: number) => this.triggerExecute(pc);
-    this.mmu.onMemoryReadCallback = (addr: number, size: number) => this.triggerMemoryRead(addr, size);
-    this.mmu.onMemoryWriteCallback = (addr: number, size: number, val: number) => this.triggerMemoryWrite(addr, size, val);
+    // Hook internal core PC updates
+    const self = this;
+    const originalStep = this.cpu.step;
+    this.cpu.step = function() {
+      const pc = self.cpu.gprs[self.cpu.PC];
+      self.triggerExecute(pc);
+      originalStep.apply(self.cpu, arguments);
+    };
+
+    // Hook core memory reads/writes
+    const originalLoadU8 = this.mmu.loadU8;
+    this.mmu.loadU8 = function(addr: number) {
+      self.triggerMemoryRead(addr, 8);
+      return originalLoadU8.apply(self.mmu, arguments);
+    };
+
+    const originalStore8 = this.mmu.store8;
+    this.mmu.store8 = function(addr: number, val: number) {
+      self.triggerMemoryWrite(addr, val);
+      originalStore8.apply(self.mmu, arguments);
+    };
   }
 
   // Hook Registering APIs
@@ -88,19 +102,18 @@ export class HookManager {
     }
   }
 
-  private triggerMemoryWrite(address: number, size: number, value: number) {
+  private triggerMemoryWrite(address: number, value: number) {
     // Exact Address watchpoints
     const hooks = this.memoryWriteHooks.get(address);
     if (hooks) {
       for (const cb of hooks) {
-        cb(address, size, value);
+        cb(address, value);
       }
     }
 
     // Range-based watchpoints
     for (const rangeHook of this.memoryWriteRangeHooks) {
       if (address >= rangeHook.start && address <= rangeHook.end) {
-        // Read old value before compiling state
         const oldValue = 0; // Standardize for simplicity
         rangeHook.callback(address, oldValue, value);
       }
@@ -109,15 +122,15 @@ export class HookManager {
 
   private createContext(): CPUContext {
     return {
-      registers: this.cpu.registers,
-      pc: this.cpu.registers[15],
+      registers: this.cpu.gprs,
+      pc: this.cpu.gprs[this.cpu.PC],
       cpsr: this.cpu.cpsr,
-      read8: (addr) => this.mmu.read8(addr),
-      read16: (addr) => this.mmu.read16(addr),
-      read32: (addr) => this.mmu.read32(addr),
-      write8: (addr, val) => this.mmu.write8(addr, val),
-      write16: (addr, val) => this.mmu.write16(addr, val),
-      write32: (addr, val) => this.mmu.write32(addr, val)
+      read8: (addr) => this.mmu.load8(addr),
+      read16: (addr) => this.mmu.load16(addr),
+      read32: (addr) => this.mmu.load32(addr),
+      write8: (addr, val) => this.mmu.store8(addr, val),
+      write16: (addr, val) => this.mmu.store16(addr, val),
+      write32: (addr, val) => this.mmu.store32(addr, val)
     };
   }
 }

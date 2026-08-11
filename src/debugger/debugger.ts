@@ -1,10 +1,8 @@
-import { GameBoyAdvance } from "../core/gba";
-
 export class BreakpointManager {
-  private gba: GameBoyAdvance;
+  private gba: any;
   private breakpoints: Set<number> = new Set();
 
-  constructor(gba: GameBoyAdvance) {
+  constructor(gba: any) {
     this.gba = gba;
   }
 

@@ -1,5 +1,3 @@
-import { GameBoyAdvance } from "../core/gba";
-
 export interface GBAKeypad {
   A: boolean;
   B: boolean;
@@ -14,7 +12,7 @@ export interface GBAKeypad {
 }
 
 export class KeypadController {
-  private gba: GameBoyAdvance;
+  private gba: any;
   private keyMap: { [key: string]: keyof GBAKeypad } = {
     "z": "A",
     "x": "B",
@@ -41,7 +39,7 @@ export class KeypadController {
     L: false
   };
 
-  constructor(gba: GameBoyAdvance) {
+  constructor(gba: any) {
     this.gba = gba;
     this.setupListeners();
   }
@@ -65,20 +63,20 @@ export class KeypadController {
   }
 
   private updateIOKeypad() {
-    // GBA KEYINPUT register (0x04000130) is active-low (0 when pressed, 1 when idle)
-    let regVal = 0x03FF;
-    if (this.state.A) regVal &= ~0x0001;
-    if (this.state.B) regVal &= ~0x0002;
-    if (this.state.SELECT) regVal &= ~0x0004;
-    if (this.state.START) regVal &= ~0x0008;
-    if (this.state.RIGHT) regVal &= ~0x0010;
-    if (this.state.LEFT) regVal &= ~0x0020;
-    if (this.state.UP) regVal &= ~0x0040;
-    if (this.state.DOWN) regVal &= ~0x0080;
-    if (this.state.R) regVal &= ~0x0100;
-    if (this.state.L) regVal &= ~0x0200;
-
-    // Write to memory mapped KEYINPUT
-    this.gba.mmu.write16(0x04000130, regVal);
+    // Write directly to GBA Keypad handler instance
+    const kp = this.gba.keypad;
+    if (kp) {
+      kp.state = 0x03FF;
+      if (this.state.A) kp.state &= ~0x0001;
+      if (this.state.B) kp.state &= ~0x0002;
+      if (this.state.SELECT) kp.state &= ~0x0004;
+      if (this.state.START) kp.state &= ~0x0008;
+      if (this.state.RIGHT) kp.state &= ~0x0010;
+      if (this.state.LEFT) kp.state &= ~0x0020;
+      if (this.state.UP) kp.state &= ~0x0040;
+      if (this.state.DOWN) kp.state &= ~0x0080;
+      if (this.state.R) kp.state &= ~0x0100;
+      if (this.state.L) kp.state &= ~0x0200;
+    }
   }
 }

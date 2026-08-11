@@ -938,3 +938,11 @@ class GameBoyAdvanceMMU {
 		return new GameBoyAdvanceGPIO(this.core, rom);
 	}
 }
+
+
+window.MemoryView = MemoryView;
+window.MemoryBlock = MemoryBlock;
+window.ROMView = ROMView;
+window.BIOSView = BIOSView;
+window.BadMemory = BadMemory;
+window.GameBoyAdvanceMMU = GameBoyAdvanceMMU;

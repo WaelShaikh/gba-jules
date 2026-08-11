@@ -224,3 +224,7 @@ class GameBoyAdvanceRTC {
 		return counter;
 	}
 }
+
+
+window.GameBoyAdvanceGPIO = GameBoyAdvanceGPIO;
+window.GameBoyAdvanceRTC = GameBoyAdvanceRTC;

@@ -136,23 +136,31 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // Drag over / leave effects
+  const dropZone = document.getElementById("drop-zone");
+
   dropZoneOverlay?.addEventListener("dragover", (e) => {
     e.preventDefault();
     dropZoneOverlay.classList.add("dragover");
+    dropZone?.classList.add("dragover");
   });
   dropZoneOverlay?.addEventListener("dragleave", () => {
     dropZoneOverlay.classList.remove("dragover");
+    dropZone?.classList.remove("dragover");
   });
   dropZoneOverlay?.addEventListener("drop", (e) => {
     e.preventDefault();
+    dropZoneOverlay.classList.remove("dragover");
+    dropZone?.classList.remove("dragover");
     const file = e.dataTransfer?.files[0];
     if (file) loadRomFile(file);
   });
 
   // Click file select option
-  const dropZone = document.getElementById("drop-zone");
   dropZone?.addEventListener("click", () => {
     romInput.click();
+  });
+  romInput.addEventListener("click", (e) => {
+    e.stopPropagation();
   });
   romInput.addEventListener("change", () => {
     const file = romInput.files?.[0];

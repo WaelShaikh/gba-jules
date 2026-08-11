@@ -865,3 +865,6 @@ class GameBoyAdvanceIO {
 		);
 	}
 }
+
+
+window.GameBoyAdvanceIO = GameBoyAdvanceIO;

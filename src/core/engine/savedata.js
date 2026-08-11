@@ -292,3 +292,8 @@ class EEPROMSavedata extends MemoryView {
 		MemoryView.prototype.replaceData.call(this, memory, 0);
 	}
 }
+
+
+window.SRAMSavedata = SRAMSavedata;
+window.FlashSavedata = FlashSavedata;
+window.EEPROMSavedata = EEPROMSavedata;

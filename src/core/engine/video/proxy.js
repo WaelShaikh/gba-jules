@@ -291,3 +291,7 @@ class GameBoyAdvanceRenderProxy {
 		}
 	}
 };
+
+
+window.MemoryProxy = MemoryProxy;
+window.GameBoyAdvanceRenderProxy = GameBoyAdvanceRenderProxy;

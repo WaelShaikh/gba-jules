@@ -1090,3 +1090,6 @@ class GameBoyAdvanceInterruptHandler {
 		}
 	}
 }
+
+
+window.GameBoyAdvanceInterruptHandler = GameBoyAdvanceInterruptHandler;

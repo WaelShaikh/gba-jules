@@ -289,3 +289,7 @@ class Serializer {
 		reader.readAsDataURL(blob);
 	}
 }
+
+
+window.Pointer = Pointer;
+window.Serializer = Serializer;

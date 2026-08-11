@@ -802,3 +802,6 @@ class ARMCoreThumb {
 		};
 	}
 }
+
+
+window.ARMCoreThumb = ARMCoreThumb;

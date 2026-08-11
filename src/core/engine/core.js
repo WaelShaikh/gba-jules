@@ -1816,3 +1816,6 @@ class ARMCore {
 		return op;
 	}
 }
+
+
+window.ARMCore = ARMCore;

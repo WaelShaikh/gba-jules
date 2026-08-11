@@ -1520,3 +1520,6 @@ class ARMCoreArm {
 		};
 	}
 }
+
+
+window.ARMCoreArm = ARMCoreArm;

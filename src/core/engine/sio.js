@@ -125,3 +125,6 @@ class GameBoyAdvanceSIO {
 		return 0;
 	}
 }
+
+
+window.GameBoyAdvanceSIO = GameBoyAdvanceSIO;

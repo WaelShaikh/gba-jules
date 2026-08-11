@@ -249,3 +249,6 @@ class GameBoyAdvanceKeypad {
 		}
 	}
 }
+
+
+window.GameBoyAdvanceKeypad = GameBoyAdvanceKeypad;

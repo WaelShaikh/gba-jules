@@ -403,3 +403,6 @@ class GameBoyAdvance {
 		}
 	}
 }
+
+
+window.GameBoyAdvance = GameBoyAdvance;

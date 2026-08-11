@@ -758,3 +758,6 @@ class GameBoyAdvanceAudio {
 		}
 	}
 }
+
+
+window.GameBoyAdvanceAudio = GameBoyAdvanceAudio;

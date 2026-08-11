@@ -1582,3 +1582,11 @@ class GameBoyAdvanceSoftwareRenderer {
 		caller.finishDraw(this.pixelData);
 	}
 }
+
+window.MemoryAligned16 = MemoryAligned16;
+window.GameBoyAdvanceVRAM = GameBoyAdvanceVRAM;
+window.GameBoyAdvanceOAM = GameBoyAdvanceOAM;
+window.GameBoyAdvancePalette = GameBoyAdvancePalette;
+window.GameBoyAdvanceOBJ = GameBoyAdvanceOBJ;
+window.GameBoyAdvanceOBJLayer = GameBoyAdvanceOBJLayer;
+window.GameBoyAdvanceSoftwareRenderer = GameBoyAdvanceSoftwareRenderer;

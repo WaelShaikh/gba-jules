@@ -19,6 +19,7 @@ body {
   flex-direction: column;
   padding: 15px;
   box-sizing: border-box;
+  overflow-y: auto;
 }
 
 .title-bar {
@@ -161,6 +162,7 @@ body {
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
+  overflow-y: auto;
 }
 
 .debugger-tabs {
@@ -192,6 +194,7 @@ body {
   overflow-y: auto;
   padding: 15px;
   display: none;
+  min-height: 250px;
 }
 
 .tab-content.active {
@@ -301,4 +304,62 @@ body {
 .mod-author {
   font-size: 0.75rem;
   color: #777;
+}
+
+/* Responsive Styles for Mobile and Tablets */
+@media (max-width: 768px) {
+  body {
+    overflow: auto;
+  }
+
+  #app {
+    flex-direction: column;
+    height: auto;
+    width: 100%;
+    overflow: visible;
+  }
+
+  .main-view {
+    flex: none;
+    width: 100%;
+    height: auto;
+    padding: 10px;
+    overflow: visible;
+  }
+
+  .screen-container {
+    height: 200px;
+    min-height: 200px;
+  }
+
+  .screen-canvas {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+  }
+
+  .debugger-panel {
+    width: 100%;
+    height: auto;
+    border-left: none;
+    border-top: 2px solid #333;
+    overflow: visible;
+  }
+
+  .tab-content {
+    min-height: 350px;
+  }
+
+  .reg-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .controls-bar {
+    justify-content: space-around;
+  }
+
+  .btn {
+    padding: 10px 14px;
+    font-size: 0.95rem;
+  }
 }
